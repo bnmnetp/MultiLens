@@ -5,8 +5,9 @@
 
         <property name="multilens.jar" value="../../../build/lib/multilens.jar"/>
         <property name="glutil.jar" value="../../../build/lib/glutil.jar"/>
-        <property name="jdbc.jar" value="jars/mysql-connector-java-3.0.10-stable-bin.jar"/>
-        <property name="servlet.jar" value="jars/servlet.jar"/>
+        <property name="jarDir" value="../../../jars"/>
+        <property name="jdbc.jar" value="${jarDir}/mysql-connector-java-3.0.10-stable-bin.jar"/>
+        <property name="servlet.jar" value="${jarDir}/servlet.jar"/>
         <property name="WEBINF" value="../WEB-INF"/>
 
         <property name="compile.debug"       value="true"/>
