@@ -1,0 +1,72 @@
+#! /bin/sh
+#
+# jrecserver    Put in /etc/init.d/jrecserver as a startup/shutdown script.
+#
+
+# Machine-dependent config
+ML3_ROOT=/home/vfac01/dfrankow/windows/work/jrecserver
+#ML3_ROOT=/export/disk01/scratch01/web/jrecserver
+GL_CONFIG_FILE=@GL_CONFIG_FILE@
+export GL_CONFIG_FILE
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+# Load modules after setting PATH
+. /etc/modules/sh
+module load java/jdk-1.4.2
+module load perl/5.8
+
+STARTUP_PROG=$ML3_ROOT/startup.pl
+STARTUP="perl -I $ML3_ROOT $STARTUP_PROG"
+SHUTDOWN="perl -I $ML3_ROOT $ML3_ROOT/shutdown.pl"
+NAME=jrecserver
+DESC="jrecserver Tomcat server"
+
+test -x $STARTUP_PROG || exit 1
+
+set -e
+
+case "$1" in
+  start)
+	echo -n "Starting $DESC: $NAME"
+	$STARTUP
+	echo "."
+	;;
+  stop)
+	echo -n "Stopping $DESC: $NAME "
+	$SHUTDOWN
+	echo "."
+	;;
+  #reload)
+	#
+	#	If the daemon can reload its config files on the fly
+	#	for example by sending it SIGHUP, do it here.
+	#
+	#	If the daemon responds to changes in its config file
+	#	directly anyway, make this a do-nothing entry.
+	#
+	# echo -n "Reloading $DESC configuration..."
+	# start-stop-daemon --stop --signal 1 --quiet --pidfile \
+	#	/var/run/$NAME.pid --exec $STARTUP
+	# echo "done."
+  #;;
+  restart|force-reload)
+	#
+	#	If the "reload" option is implemented, move the "force-reload"
+	#	option to the "reload" entry above. If not, "force-reload" is
+	#	just the same as "restart".
+	#
+	echo -n "Restarting $DESC: $NAME"
+        $SHUTDOWN
+	sleep 1
+        $STARTUP
+	echo "."
+	;;
+  *)
+	N=/etc/init.d/$NAME
+	# echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
+	echo "Usage: $N {start|stop|restart|force-reload}" >&2
+	exit 1
+	;;
+esac
+
+exit 0

@@ -1,0 +1,477 @@
+<!-- A "project" describes a set of targets that may be requested
+     when Ant is executed.  The "default" attribute defines the
+     target which is executed if no specific target is requested,
+     and the "basedir" attribute defines the current working directory
+     from which Ant executes the requested task.  This is normally
+     set to the current working directory.
+-->
+
+
+<!-- TODO:
+-->
+
+
+<project name="Java Recommender" default="jars" basedir=".">
+
+
+
+<!-- ===================== Property Definitions =========================== -->
+
+<!--
+
+  Each of the following properties are used in the build script.
+  Values for these properties are set by the first place they are
+  defined, from the following list:
+  * Definitions on the "ant" command line (ant -Dcatalina.home=xyz compile)
+  * Definitions from a "build.properties" file in the top level
+    source directory
+  * Definitions from a "build.properties" file in the developer's
+    home directory
+  * Default definitions in this build.xml file
+
+  You will note below that property values can be composed based on the
+  contents of previously defined properties.  This is a powerful technique
+  that helps you minimize the number of changes required when your development
+  environment is modified.  Note that property composition is allowed within
+  "build.properties" files as well as in the "build.xml" script.
+
+-->
+
+<property file="build.properties"/>
+<property file="${user.home}/build.properties"/>
+
+
+<!-- ==================== File and Directory Names ======================== -->
+
+<!--
+
+  These properties generally define file and directory names (or paths) that
+  affect where the build process stores its outputs.
+
+  app.name             Base name of this application, used to
+                       construct filenames and directories.
+                       Defaults to "myapp".
+
+  app.version          Version identifier for this application.
+
+  build.home           The directory into which the "prepare" and
+                       "compile" targets will generate their output.
+                       Defaults to "build".
+
+  catalina.home        The directory in which you have installed
+                       a binary distribution of Tomcat 4.  This will
+                       be used by the "deploy" target.
+
+  deploy.home          The name of the directory into which the
+                       deployment hierarchy will be created, and into
+                       which the build directory will be copied.
+                       Defaults to "${catalina.home}/webapps/${app.name}".
+
+  dist.home            The name of the base directory in which
+                       distribution files are created.
+                       Defaults to "dist".
+
+-->
+
+<property name="app.name"      value="MultiLens"/>
+<property name="app.title"     value="MultiLens recommendation library"/>
+<property name="app.version"   value="1.0.9"/>
+<property name="build.home"    value="build"/>
+<property name="catalina.home"
+          value="/project/Grouplens/java/server/jakarta-tomcat-4.1.12"/>
+<property name="deploy.home"
+          value="${catalina.home}/webapps/${app.name}"/>
+<property name="dist.home"     value="dist"/>
+
+
+
+<!--  ==================== Compilation Control Options ==================== -->
+
+<!--
+
+  These properties control option settings on the Javac compiler when it
+  is invoked using the <javac> task.
+
+  compile.debug        Should compilation include the debug option?
+
+  compile.deprecation  Should compilation include the deprecation option?
+
+  compile.optimize     Should compilation include the optimize option?
+
+-->
+
+<property name="compile.debug"       value="true"/>
+<property name="compile.deprecation" value="false"/>
+<property name="compile.optimize"    value="true"/>
+
+
+
+<!-- ==================== External Dependencies =========================== -->
+
+
+<!--
+
+  Use property values to define the locations of external JAR files on which
+  your application will depend.  In general, these values will be used for
+  two purposes:
+  * Inclusion on the classpath that is passed to the Javac compiler
+  * Being copied into the "/build/lib" directory during execution
+    of the "deploy" target.
+
+  Because we will automatically include all of the Java classes that Tomcat 4
+  exposes to web applications, we will not need to explicitly list any of those
+  dependencies.  You only need to worry about external dependencies for JAR
+  files that you are going to include inside your "/WEB-INF/lib" directory.
+
+-->
+
+  <property name="mysql.jdbc"
+            value="jars/mysql-connector-java-3.0.7-stable-bin.jar"/>
+
+  <property name="junit.jar"
+            value="jars/junit.jar"/>
+
+  <property name="colt.jar"
+            value="jars/colt.jar"/>
+
+
+<!-- ==================== Compilation Classpath =========================== -->
+
+<!--
+
+  Rather than relying on the CLASSPATH environment variable, Ant includes
+  features that makes it easy to dynamically construct the classpath you
+  need for each compilation.  The example below constructs the compile
+  classpath to include the servlet.jar file, as well as the other components
+  that Tomcat makes available to web applications automatically, plus anything
+  that you explicitly added.
+
+-->
+
+<path id="compile.classpath">
+  <pathelement location="${mysql.jdbc}"/>
+  <pathelement location="${junit.jar}"/>
+  <pathelement location="${colt.jar}"/>
+</path>
+
+
+
+<!-- ==================== All Target ====================================== -->
+
+<!--
+
+  The "rebuild" target is a shortcut for running the "clean" target followed
+  by the "compile" target, to force a complete recompile.
+
+-->
+
+<target name="rebuild" depends="clean,compile"
+   description="Clean build and dist, then compile"/>
+
+
+
+<!-- ==================== Clean Target ==================================== -->
+
+<!--
+
+  The "clean" target deletes any previous "build" and "dist" directory,
+  so that you can be ensured the application can be built from scratch.
+
+-->
+
+<target name="clean"
+   description="Delete old build and dist directories">
+<delete dir="${build.home}"/>
+<delete dir="${dist.home}"/>
+</target>
+
+
+
+<!-- ==================== Compile Target ================================== -->
+
+<!--
+
+  The "compile" target transforms source files (from your "src" directory)
+  into object files in the appropriate location in the build directory.
+  This example assumes that you will be including your classes in an
+  unpacked directory hierarchy under "/WEB-INF/classes".
+
+-->
+
+<target name="version">
+    <tstamp/>
+    <copy file="src/org/grouplens/multilens/Version.java.pre"
+        toFile="src/org/grouplens/multilens/Version.java"
+        overwrite="true" failonerror="true">
+        <filterset>
+		    <filter token="app.version" value="${app.version}"/>
+		    <filter token="app.title"   value="${app.title}"/>
+		    <filter token="user.name"   value="${user.name}"/>
+		    <filter token="TODAY"       value="${TODAY}"/>
+		    <filter token="DSTAMP"      value="${DSTAMP}"/>
+		    <filter token="TSTAMP"      value="${TSTAMP}"/>
+        </filterset>
+    </copy>
+</target>
+
+<target name="compile" depends="prepare,version"
+   description="Compile Java sources">
+
+<!-- Compile Java classes as necessary -->
+<mkdir    dir="${build.home}/classes"/>
+<javac srcdir="src"
+          destdir="${build.home}/classes"
+           debug="${compile.debug}"
+     deprecation="${compile.deprecation}"
+        optimize="${compile.optimize}"
+          source="1.4">
+     <!-- source="1.4" allows assert()s -->
+   <classpath refid="compile.classpath"/>
+</javac>
+
+<!-- Copy associated resource files -->
+<copy  todir="${build.home}/classes">
+<fileset dir="src" includes="**/*.properties"/>
+<fileset dir="src" includes="*.scm"/>
+</copy>
+
+</target>
+
+<target name="jars" depends="multilens.jar,glutil.jar" description="make jars"/>
+
+<target name="multilens.jar" depends="compile" description="make multilens.jar">
+    <jar jarfile="${build.home}/lib/multilens.jar" basedir="${build.home}/classes" includes="**" excludes="**/org/grouplens/util/**/*.class">
+        <manifest>
+          <attribute name="Built-By" value="${user.name}"/>
+
+          <attribute name="Specification-Title" value="${app.title}"/>
+          <attribute name="Specification-Version" value="${app.version}"/>
+          <attribute name="Specification-Vendor" value="GroupLens"/>
+          <attribute name="Implementation-Title" value="${app.title}"/>
+          <attribute name="Implementation-Version" value="${app.version}"/> 
+          <attribute name="Implementation-Vendor" value="GroupLens"/>
+        </manifest>
+    </jar>
+</target>
+
+<property name="glutil.title"   value="GroupLens utilities library"/>
+
+<target name="glutil.jar" depends="compile" description="make glutil.jar">
+    <jar jarfile="${build.home}/lib/glutil.jar" basedir="${build.home}/classes" includes="**/org/grouplens/util/**/*.class">
+        <manifest>
+          <attribute name="Built-By" value="${user.name}"/>
+
+          <attribute name="Specification-Title" value="${glutil.title}"/>
+          <attribute name="Specification-Version" value="${app.version}"/>
+          <attribute name="Specification-Vendor" value="GroupLens"/>
+          <attribute name="Implementation-Title" value="${glutil.title}"/>
+          <attribute name="Implementation-Version" value="${app.version}"/> 
+          <attribute name="Implementation-Vendor" value="GroupLens"/>
+        </manifest>
+    </jar>
+</target>
+
+
+<!-- ==================== Cook Target ================================== -->
+
+
+<target name="cook" depends="compile"
+   description="build a new model and write to database">
+
+<java classname="jre.ModelBuilder" fork="true" failonerror="true" maxmemory="600m"
+      dir="${build.home}/classes">
+   <classpath>
+      <pathelement location="${build.home}/classes"/>
+   </classpath>
+   <classpath refid="compile.classpath"/>
+</java>
+
+</target>
+
+<!-- ==================== predict Target ================================== -->
+<target name="predict" depends="compile"
+   description="build a new model and write to database">
+
+<java classname="jre.JustCountRec" fork="true" failonerror="true" maxmemory="500m"
+      dir="${build.home}/classes">
+   <classpath>
+      <pathelement location="${build.home}/classes"/>
+   </classpath>
+   <classpath refid="compile.classpath"/>
+</java>
+
+</target>
+
+<!-- ==================== Deploy Target =================================== -->
+
+<!--
+
+  The "deploy" target copies the contents of the build directory into a
+  location required by our servlet container, and picks up any external
+  dependencies along the way.  AFter restarting the servlet container, you
+  can now test your web application.
+
+-->
+
+<target name="deploy" depends="compile"
+   description="Deploy application to servlet container">
+
+<!-- Copy the contents of the build directory -->
+<mkdir     dir="${deploy.home}"/>
+<copy    todir="${deploy.home}">
+<fileset dir="${build.home}"/>
+</copy>
+
+</target>
+
+
+
+<!-- ==================== Dist Target ===================================== -->
+
+
+<!--
+
+  The "dist" target creates a binary distribution of your application
+  in a directory structure ready to be archived in a tar.gz or zip file.
+  Note that this target depends on two others:
+  * "deploy" so that the entire web application (including external
+    dependencies) will have been assembled
+  * "javadoc" so that the application Javadocs will have been created
+
+-->
+
+<target name="dist" depends="deploy,javadoc"
+   description="Create binary distribution">
+
+<!-- Copy documentation subdirectory -->
+<copy    todir="${dist.home}/docs">
+<fileset dir="docs"/>
+</copy>
+
+<!-- Create application JAR file -->
+<jar jarfile="${dist.home}/${app.name}.war"
+         basedir="${deploy.home}"/>
+
+<!-- Copy additional files to ${dist.home} as necessary -->
+
+</target>
+
+
+
+<!-- ==================== Javadoc Target ================================== -->
+
+<!--
+
+  The "javadoc" target creates Javadoc API documentation for the Java
+  classes included in your application.  Normally, this is only required
+  when preparing a distribution release, but is available as a separate
+  target in case the developer wants to create Javadocs independently.
+
+-->
+
+<target name="javadoc" depends="compile"
+   description="Create Javadoc API documentation">
+
+<mkdir          dir="${dist.home}/docs/api"/>
+<javadoc sourcepath="src"
+            destdir="${dist.home}/docs/api"
+       packagenames="org.grouplens.*"
+             source="1.4">
+     <!-- source="1.4" allows assert()s -->
+<classpath refid="compile.classpath"/>
+</javadoc>
+
+</target>
+
+<target name="cookbook" description="Create MultiLens cookbook DVI.">
+
+  <!-- Execute latex twice, as is the custom -->
+
+  <exec executable="latex" dir="doc">
+    <!-- env has value, not path, because the trailing : is important -->
+    <env key="TEXINPUTS" value="styles:.:"/>
+    <arg value="Jrec"/>
+  </exec>
+
+  <exec executable="latex" dir="doc">
+    <!-- env has value, not path, because the trailing : is important -->
+    <env key="TEXINPUTS" value="styles:.:"/>
+    <arg value="Jrec"/>
+  </exec>
+
+</target>
+
+<target name="cookbook-pdf" description="Create MultiLens cookbook PDF."
+  depends="cookbook">
+
+  <!-- Execute latex twice, as is the custom -->
+
+  <exec executable="dvipdf" dir="doc">
+    <arg value="Jrec"/>
+  </exec>
+
+</target>
+
+
+<!-- ==================== Prepare Target ================================== -->
+
+<!--
+
+  The "prepare" target is used to create the "build" destination directory,
+  and copy the static contents of your web application to it.  If you need
+  to copy static files from external dependencies, you can customize the
+  contents of this task.
+
+  Normally, this task is executed indirectly when needed.
+
+-->
+
+<target name="prepare">
+
+<!-- Create build directory and copy static content -->
+<mkdir  dir="${build.home}"/>
+<mkdir dir="${build.home}/classes"/>
+<!-- Copy external dependencies as required -->
+<!-- *** CUSTOMIZE HERE AS REQUIRED BY YOUR APPLICATION *** -->
+<mkdir  dir="${build.home}/lib"/>
+<!--
+    <copy todir="${build..home}/lib" file="${foo.jar}"/>
+-->
+
+<!-- Copy static files from external dependencies as needed -->
+
+</target>
+
+   <target name="runtests" description="Run unit tests" depends="compile">
+        <java classname="junit.textui.TestRunner" fork="true" failonerror="true">
+           <sysproperty key="GL_CONFIG_FILE" value="src/org/grouplens/util/test/gl.properties"/>
+           <classpath>
+              <pathelement location="${build.home}/classes"/>
+              <pathelement location="${mysql.jdbc}"/>
+              <pathelement location="${junit.jar}"/>
+           </classpath>
+           <arg value="-enableassertions"/>
+           <arg value="org.grouplens.multilens.junit.AllTests"/>
+        </java>
+    </target>
+
+    <!-- I'd like to use the junit task:
+    <taskdef name="junit" classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask"/>
+
+    <target name="runtests" description="Run unit tests" depends="compile">
+        <junit printsummary="yes" haltonfailure="on">
+            <sysproperty key="GL_CONFIG_FILE" value="src/org/grouplens/util/test/gl.properties"/>
+            <classpath>
+                <pathelement location="${build.home}/classes"/>
+                <pathelement location="${mysql.jdbc}"/>
+                <pathelement location="${junit.jar}"/>
+            </classpath>
+            <jvmarg value="-enableassertions"/>
+            <formatter type="plain" />
+            <test name="org.grouplens.multilens.junit.AllTests"/>
+        </junit>
+    </target>
+    -->
+
+</project>
+

@@ -1,0 +1,32 @@
+package org.grouplens.multilens;
+
+/**
+ * @author dfrankow
+ * 
+ * Return the version of MultiLens.
+ */
+public class Version {
+    public static String title() {
+        return "@app.title@";
+    }
+    public static String version() {
+        return "@app.version@";
+    }
+    public static String builtBy() {
+        return "@user.name@";
+    }
+    public static String dateBuilt() {
+        return "@TODAY@";
+    }
+    public static String timeBuilt() {
+        return "@TSTAMP@";
+    }
+    public static String longVersion() {
+        return title() + " " + version() + " built by " + builtBy()
+           + " on " + dateBuilt() + " at " + timeBuilt();
+    }
+
+    public static void main(String[] args) {
+        System.out.println(longVersion());
+    }
+}

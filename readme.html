@@ -1,0 +1,170 @@
+<html>
+<head>
+<title>jrecserver README</title>
+</head>
+<body>
+
+$Header$
+
+<h1>INTRODUCTION</h1>
+
+<p>MultiLens is a CVS repository containing code necessary to produce
+two JARs:
+<ol>
+<li>multilens.jar
+<li>glutil.jar
+</ol>
+
+<p>The rest of this doc contains:
+
+<ol>
+<li><a href="#bigpicture">The big picture</a>
+<li><a href="#checkingout">Checking out MultiLens</a>
+<li><a href="#prereqs">External prerequisites</a>
+<li><a href="#config">Configuring</a>
+<li><a href="#readonly">Read-only access</a>
+</ol>
+
+<p>For more information:</p>
+
+<ol>
+<li>If the javadoc is generated in this source
+tree ("ant javadoc"), it is <a href="dist/docs/api/index.html">here</a>.
+
+<li><a
+href="http://www.cs.umn.edu/Research/GroupLens/internal/java/MultiLens/dist/docs/api/index.html">Here</a>
+is a global copy of the javadoc.
+
+<li>If the MultiLens cookbook is generated in this source tree ("ant cookbook-pdf"), it is <a href="doc/Jrec.pdf">here</a>.
+
+<li>This repository's root is <a href=".">here</a>.
+
+</ol>
+
+<a name="bigpicture"/>
+<h2>THE BIG PICTURE</h2>
+
+<p>Here are the CVS repositories that contain code to run <a
+href="http://www.movielens.umn.edu">www.movielens.umn.edu</a>, and how
+they depend on each other.  An arrow indicates a dependency, with the
+tail depending on the head.</p>
+
+<pre>
+
+       movielens3 ==> jrecserver ==> MultiLens (glutil.jar, glutil.pm)
+          |                                        ^           ^
+          |                                        |           |
+          ======================================================
+</pre>
+
+<ol>
+
+<li><strong>MultiLens</strong> contains code to build models, and use
+models and ratings to produce recommendations for users.  It also
+contains org.grouplens.util.* (which becomes glutil.jar) and
+glutil.pm, which contain some utilities used by all Java and Perl for
+reading configuration files, logging, etc.  These jars and pms could
+live separately from MultiLens, but it was convenient to put them
+there for now.
+
+<li><strong>jrecserver</strong> contains code to serve up MultiLens
+recommendations in Tomcat, and other low-level recommender operations,
+e.g., build models.  This is nice because it may be run independently
+of a web site, e.g. be used by 0 or many web sites.
+
+<li><strong>movielens3</strong> contains code for a movie recommender
+site that runs in Tomcat.  It has searching, submitting ratings,
+getting recommendations, etc.  It communicates to jrecserver through
+XML only.  This makes it fairly independent of jrecserver.  If someone
+wished to create another recommendation server and offer an XML API,
+it could use that instead.
+</ol>
+
+Each of the 3 applications represented by these CVS repositories uses
+glutil.jar and glutil.pm.
+
+<a name="checkingout"/>
+<h1>CHECKING OUT MultiLens</h1>
+
+Example for tcsh:
+
+<pre>
+  setenv CVSROOT /project/Grouplens/cvs-repository/
+  cvs co MultiLens
+</pre>
+
+If you've got this doc, probably you've already done that.
+
+<a name="prereqs"/>
+<h1>EXTERNAL PREREQUISITES</h1>
+
+MultiLens requires the following from external sources before it is
+ready to run:
+
+<table border>
+<tr>
+<td>Prerequisite</td>
+<td>Example (on gibson, using tcsh)</td>
+</tr>
+
+<tr>
+<td>Java 1.4</td>
+<td>module load java/jdk-1.4</td>
+</tr>
+
+<tr>
+<td>ant</td>
+<td>module load java/ant</td>
+</tr>
+
+<tr>
+<td>GL_CONFIG_FILE environment variable set to the full pathname of a
+gl.properties file</td>
+<td>setenv GL_CONFIG_FILE `pwd`/MultiLens/src/org/grouplens/util/test/gl.properties</td>
+</tr>
+
+</table>
+
+<a name="config"/>
+<h1>CONFIGURING</h1>
+
+<p>All of the configuration changes necessary are in gl.properties.
+You should copy an existing properties file and modify it.</p>
+
+Properties to look at carefully and modify as necessary:
+
+<ol>
+<li>dbUrl
+<li>dbUser
+<li>dbPassword
+<li>Anything starting with "multilens."
+</ol>
+
+<a name="cookingmodels"/>
+<h1>COOKING MODELS</h1>
+
+More needed here.
+
+<a name="readonly"/>
+<h2>
+Read-only access
+</h2>
+
+<p>For read-only access to hugo, the production database, use the
+'readonly' user (password is blank).  This user has no permissions to
+update tables.  The application still works!</p>
+
+<a name="#running"/>
+<h1>RUNNING</h1>
+
+<p>NOTE #1: <strong>Please don't run on our production machine (currently
+hugo)!</strong>.  As long as you stay off that machine, it is very
+unlikely you will accidentally shut down the production web site, even
+if your configuration 'points' to the production site.</p>
+
+<p>NOTE #2: If you wish to point to the production database, consider <a
+href="#readonly">running read-only</a>, so you can play without
+modifying the contents of the production database.</p>
+
+</body>
+</html>
