@@ -1,0 +1,62 @@
+<project name="Jrec" default="compile" basedir=".">
+        <property name="JrecBuildDir"  value="classes"/>
+        <property name="JrecJar"  value="jrec.jar"/>
+        <property name="JrecDoc"  value="doc"/>        
+
+        <property name="multilens.jar" value="../../../build/lib/multilens.jar"/>
+        <property name="glutil.jar" value="../../../build/lib/glutil.jar"/>
+        <property name="jdbc.jar" value="jars/mysql-connector-java-3.0.10-stable-bin.jar"/>
+        <property name="servlet.jar" value="jars/servlet.jar"/>
+        <property name="WEBINF" value="../WEB-INF"/>
+
+        <property name="compile.debug"       value="true"/>
+        <property name="compile.deprecation" value="false"/>
+        <property name="compile.optimize"    value="true"/>
+
+        <path id="compile.classpath">
+                <pathelement location="${servlet.jar}"/>
+                <pathelement location="${multilens.jar}"/>
+                <pathelement location="${glutil.jar}"/>
+                <pathelement location="${jdbc.jar}"/>
+        </path>
+
+        <target name="initBuildDir">
+                <tstamp/>
+                <mkdir dir="${JrecBuildDir}"/>
+        </target>
+
+        <target name="compile" depends="initBuildDir">                
+                <javac srcdir="." destdir="${JrecBuildDir}"
+                       debug="${compile.debug}"
+                       deprecation="${compile.deprecation}"
+                       optimize="${compile.optimize}"
+                       source="1.4">
+                       <!-- source="1.4" allows assert()s -->
+
+                        <classpath refid="compile.classpath"/>
+                </javac>
+		<jar jarfile="${JrecJar}" basedir="${JrecBuildDir}" includes="jre/**"/>	
+
+
+<!-- Don't copy servlet.jar, the servlet container will supply it -->
+<!-- Don't copy jdbc.jar,    the servlet container will supply it -->
+                <copy file="${jdbc.jar}" todir="${WEBINF}/lib"/>
+                <copy file="${glutil.jar}" todir="${WEBINF}/lib"/>
+                <copy file="${multilens.jar}" todir="${WEBINF}/lib"/>
+                <copy file="${JrecJar}" todir="${WEBINF}/lib"/>
+        </target>
+        
+        <target name="clean">                
+                <delete dir="${JrecBuildDir}" />
+                <delete dir="${WEBINF}/lib" />
+                <delete dir="${WEBINF}/classes" />
+        </target>
+
+        <target name="javadoc" depends="compile"> 
+                <mkdir dir="${JrecDoc}"/>
+                <javadoc sourcepath="." destdir="${JrecDoc}/api" packagenames="jre.*">
+                        <classpath refid="compile.classpath"/>
+                </javadoc>
+        </target>
+</project>
+

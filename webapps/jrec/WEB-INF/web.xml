@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+    "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+    <servlet>
+        <servlet-name>Jrec</servlet-name>
+        <servlet-class>jre.servlet.Jrec</servlet-class>
+        <load-on-startup> 3 </load-on-startup>
+    </servlet>
+
+    <!-- Don't let outside folks see the source tree -->
+    <servlet>
+        <servlet-name>noaccess</servlet-name>
+        <servlet-class>jre.servlet.noaccess</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>noaccess</servlet-name>
+        <url-pattern>/src</url-pattern>
+    </servlet-mapping>
+
+</web-app>

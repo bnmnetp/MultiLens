@@ -1,0 +1,289 @@
+<html>
+<head>
+<title>jrecserver README</title>
+</head>
+<body>
+
+$Header$
+
+<h1>INTRODUCTION</h1>
+
+<p>jrecserver is a CVS repository containing code necessary to run a
+recommendation server within <a
+href="http://jakarta.apache.org/tomcat/">Tomcat</a>, a Java servlet
+engine and web server.
+
+<p>This document describes how to run jrecserver within Tomcat.</p>
+
+<p>The rest of this doc contains:
+
+<ol>
+<li><a href="#bigpicture">The big picture</a>
+<li><a href="#checkingout">Checking out jrecserver</a>
+<li><a href="#prereqs">External prerequisites</a>
+<li><a href="#config">Configuring</a>
+<li><a href="#cookingmodels">Cooking models</a>
+<li><a href="#notrunning">Not running</a>
+<li><a href="#readonly">Read-only access</a>
+<li><a href="#running">Running</a>
+<li><a href="#testing">Testing the server</a>
+</ol>
+
+For more information, if the javadoc is generated in this source tree,
+it is <a href="webapps/jrec/src/doc/api/index.html">here</a>.
+
+<a name="bigpicture"/>
+<h2>THE BIG PICTURE</h2>
+
+<p>Here are the CVS repositories that contain code to run <a
+href="http://www.movielens.umn.edu">www.movielens.umn.edu</a>, and how
+they depend on each other.  An arrow indicates a dependency, with the
+tail depending on the head.</p>
+
+<pre>
+
+       movielens3 ==> jrecserver ==> MultiLens (glutil.jar, glutil.pm)
+          |                                        ^           ^
+          |                                        |           |
+          ======================================================
+</pre>
+
+<ol>
+
+<li><strong>MultiLens</strong> contains code to build models, and use
+models and ratings to produce recommendations for users.  It also
+contains org.grouplens.util.* (which becomes glutil.jar) and
+glutil.pm, which contain some utilities used by all Java and Perl for
+reading configuration files, logging, etc.  These jars and pms could
+live separately from MultiLens, but it was convenient to put them
+there for now.
+
+<li><strong>jrecserver</strong> contains code to serve up MultiLens
+recommendations in Tomcat, and other low-level recommender operations,
+e.g., build models.  This is nice because it may be run independently
+of a web site, e.g. be used by 0 or many web sites.
+
+<li><strong>movielens3</strong> contains code for a movie recommender
+site that runs in Tomcat.  It has searching, submitting ratings,
+getting recommendations, etc.  It communicates to jrecserver through
+XML only.  This makes it fairly independent of jrecserver.  If someone
+wished to create another recommendation server and offer an XML API,
+it could use that instead.
+</ol>
+
+Each of the 3 applications represented by these CVS repositories uses
+glutil.jar and glutil.pm.
+
+<a name="checkingout"/>
+<h1>CHECKING OUT jrecserver</h1>
+
+Example for tcsh:
+
+<pre>
+  setenv CVSROOT /project/Grouplens/cvs-repository/
+  cvs co jrecserver
+</pre>
+
+If you've got this doc, probably you've already done that.
+
+<a name="prereqs"/>
+<h1>EXTERNAL PREREQUISITES</h1>
+
+jrecserver requires the following from external sources before it is
+ready to run:
+
+<table border>
+<tr>
+<td>Software</td>
+<td>Example (on gibson, using tcsh)</td>
+</tr>
+
+<tr>
+<td>Tomcat</td>
+<td>CATALINA_HOME=/export/scratch/web/jakarta-tomcat-4.1.24</td>
+</tr>
+
+<tr>
+<td>Apache (if you wish it as a front-end to Tomcat)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Perl (with the DBI module)</td>
+<td>module load perl</td>
+</tr>
+
+<tr>
+<td>Java 1.4</td>
+<td>module load java/jdk-1.4</td>
+</tr>
+
+<tr>
+<td>ant</td>
+<td>setenv PATH /project/gl10/usr/jakarta-ant-1.4.1/bin:$PATH</td>
+</tr>
+
+<tr>
+<td>a JDBC jar</td>
+<td>/scratch/ml3/jakarta-tomcat-4.1.24/common/lib/mysql-connector-java-3.0.7-stable-bin.jar</td>
+</tr>
+
+<tr>
+<td>multilens.jar</td>
+<td>/scratch/ml3/MultiLens/build/WEB-INF/lib/multilens.jar</td>
+</tr>
+
+<tr>
+<td>glutil.jar</td>
+<td>/scratch/ml3/MultiLens/build/WEB-INF/lib/glutil.jar</td>
+</tr>
+
+<tr>
+<td>GLUTILPMDIR (location of glutil.pm)</td>
+<td>/scratch/ml3/MultiLens/src/org/grouplens/util</td>
+</tr>
+
+<tr>
+<td>GL_CONFIG_FILE environment variable set to the full pathname of a
+gl.properties file</td>
+<td>/my/dir/gl.properties (copy and modify /scratch/ml3/MultiLens/src/org/grouplens/util/test/gl.properties)</td>
+</tr>
+
+</table>
+
+<a name="config"/>
+<h1>CONFIGURING</h1>
+
+<p>All of the configuration changes necessary are in gl.properties.
+You should copy an existing properties file and modify it to point to
+your jrecserver.</p>
+
+Properties to look at carefully and modify as necessary:
+
+<ol>
+<li>dbUrl
+<li>dbUser
+<li>dbPassword
+<li>CATALINA_HOME
+<li>modelFile
+<li>avgModelFile
+<li>addressRestriction
+<li>Anything starting with "jrecserver."
+<li>Anything starting with "modelbuild." if you wish to build models
+</ol>
+
+<a name="cookingmodels"/>
+<h1>COOKING MODELS</h1>
+
+jrecserver needs 
+
+<ul>
+<li>a file of the item-item recommendation model (modelFile config property)
+<li>a file of the averages recommendation model (avgModelFile config property)
+</ul>
+
+in order to run.  To generate such a file:
+
+<ol>
+<li><a href="#config">Configure properly</a>.
+<li><tt>cd jrecserver</tt>
+<li><tt>perl -I $GLUTILPMDIR buildmodel.pl</tt>
+</ol>
+
+With current Movielens production data, this will require at least
+800M of memory, and take about 45 minutes.
+
+<a name="#notrunning"/>
+<h1>NOT RUNNING</h1>
+
+<p>If you want to get recommendations from a jrecserver, you don't
+have to run one.  If your load is not too heavy, and you are content
+to get recommendations from the production data, you may use the
+production server.  We have set up Apache so that you can connect from
+anywhere in cs.umn.edu.  Use
+http://movielens.umn.edu/jrec/servlet/Jrec (for example, as your
+recEngineUrl in a configuration file).
+
+<a name="readonly"/>
+<h2>
+Read-only access
+</h2>
+
+<p>For read-only access to hugo, the production database, use the
+'readonly' user (password is blank).  This user has no permissions to
+update tables.  The application still works!</p>
+
+<a name="#running"/>
+<h1>RUNNING</h1>
+
+<p>NOTE #1: <strong>Please don't run on our production machine (currently
+hugo)!</strong>.  As long as you stay off that machine, it is very
+unlikely you will accidentally shut down the production web site, even
+if your configuration 'points' to the production site.</p>
+
+<p>NOTE #2: If you wish to point to the production database, consider <a
+href="#readonly">running read-only</a>, so you can play without
+modifying the contents of the production database.</p>
+
+<p>With these notes in mind, here are the steps to running the
+application.</p>
+
+<ol>
+<li>Satisfy <a href="#prereqs">external prerequisites</a>.
+<li>Set <a href="#config">configuration properties</a>.
+<li><tt>cd jrecserver</tt>
+<li><tt>perl -I $GLUTILPMDIR configure.pl</tt>.  This will (over)write conf/server.xml.
+<li><tt>perl -I $GLUTILPMDIR startup.pl</tt>
+<li><tt>tail -f logs/catalina.out</tt> to verify that the server has indeed
+started and read its model files.</p>
+</ol>
+
+
+<a name="#testing"/>
+<h1>
+TESTING THE SERVER
+</h1>
+
+The following command will get 10 recommendations for user 110160 if
+recEngineUrl is "http://movielens.umn.edu/jrec/servlet/Jrec":
+
+<pre>
+wget -O - 'http://movielens.umn.edu/jrec/servlet/Jrec?request=getrecs&userid=110160&numrecs=10'
+</pre>
+
+If it succeeds you should see something like:
+
+<pre>
+  --15:35:37--  http://movielens.umn.edu/jrec/servlet/Jrec?request=getrecs&userid=110160&numrecs=10
+	     => `-'
+  Resolving movielens.umn.edu... done.
+  Connecting to movielens.umn.edu[128.101.35.249]:80... connected.
+  HTTP request sent, awaiting response... 200 
+  Length: 518 [text/xml]
+
+   0% [                                    ] 0             --.--K/s    ETA --:--
+  &lt;?xml version="1.0"?>
+  &lt;recapi>&lt;userid>110160</userid>&lt; item movie="319" pred="5" sim="2.19" />
+  &lt;item movie="6377" pred="4.5" sim="57.15" />
+  &lt;item movie="6365" pred="4.5" sim="37.07" />
+  &lt;item movie="5682" pred="4.5" sim="27.6" />
+  &lt;item movie="5294" pred="4.5" sim="25.66" />
+  &lt;item movie="3275" pred="4.5" sim="24.22" />
+  &lt;item movie="5782" pred="4.5" sim="22.76" />
+  &lt;item movie="4011" pred="4.5" sim="21.75" />
+  &lt;item movie="6104" pred="4.5" sim="19.58" />
+  &lt;item movie="6440" pred="4.5" sim="19.43" />
+  100%[===================================>] 518          505.86K/s    ETA 00:00
+
+  15:35:39 (505.86 KB/s) - `-' saved [518/518]
+</pre>
+
+<h2>Troubleshooting</h2>
+
+Check the files in jrecserver/logs, especially catalina.out. They
+usually contain a lot of helpful information. If the server keeps
+restarting itself it might mean that there is a configuration error
+and the server keeps reloading that configuration file.
+
+</body>
+</html>
