@@ -1,0 +1,10 @@
+mysql-connector-java-3.0.10-stable-bin.jar comes from
+
+http://www.mysql.com/downloads/api-jdbc-stable.html
+
+
+It is licensed under the GNU General Public License.  This allows
+redistribution.  For more information, see
+
+http://dev.mysql.com/downloads/connector/j/3.0.html
+http://www.gnu.org/licenses/gpl.html

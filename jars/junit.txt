@@ -1,0 +1,6 @@
+junit.jar came from http://www.junit.org/index.htm, version 3.8.1.
+
+junit is licensed under the "Common Public License Version 1.0", and
+rights of redistribution are granted in section 2a.  See
+http://www.opensource.org/licenses/cpl.php.
+
