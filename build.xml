@@ -126,7 +126,7 @@
 -->
 
   <property name="mysql.jdbc"
-            value="jars/mysql-connector-java-3.0.7-stable-bin.jar"/>
+            value="jars/mysql-connector-java-3.0.10-stable-bin.jar"/>
 
   <property name="junit.jar"
             value="jars/junit.jar"/>
