@@ -1,0 +1,15 @@
+This jar is not necessary to run the 'jrec' servlet in Tomcat, because
+it is bundled into Tomcat.  However, it is convenient to have this jar
+here for now, in order to allow you to compile with and include in
+development environments (like Eclipse).
+
+servlet.jar came from
+
+.../jakarta-tomcat-4.1.24/common/lib/servlet.jar .
+
+Tomcat 4.1.x is under the Apache common license, see 
+
+http://jakarta.apache.org/tomcat/
+http://www.apache.org/licenses/LICENSE-2.0.html
+
+Section 2 grants permission to redistribute it and derivative works.
